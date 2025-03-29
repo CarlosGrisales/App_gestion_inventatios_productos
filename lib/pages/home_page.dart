@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:gestion_inventarios_productos/models/enums.dart';
+import 'package:gestion_inventarios_productos/models/todo.dart';
+import 'package:gestion_inventarios_productos/services/database_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -8,6 +13,29 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  List<Todo> todos = [];
+  StreamSubscription? todosStream;
+
+  @override
+  void initState() {
+    super.initState();
+
+    todosStream = DatabaseService.db.todos
+        .buildQuery<Todo>()
+        .watch(fireImmediately: true)
+        .listen((data) {
+      setState(() {
+        todos = data;
+      });
+    });
+
+    @override
+    void dispose() {
+      todosStream?.cancel();
+      super.dispose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +45,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: _addOrEditTodo,
         child: const Icon(Icons.add),
       ),
     );
@@ -25,26 +53,34 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildUI() {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
       child: ListView.builder(
-        itemCount: 10,
+        itemCount: todos.length,
         itemBuilder: (BuildContext context, int index) {
+          final todo = todos[index];
           return Card(
             child: ListTile(
-              title: Text('Item $index'),
+              title: Text(todo.content ?? ''),
+              subtitle: Text('Markerd ${todo.status.name} at ${todo.updateAt}'),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      _addOrEditTodo(todo: todo);
+                    },
                     icon: const Icon(
                       Icons.edit,
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      await DatabaseService.db.writeTxn(() async {
+                        await DatabaseService.db.todos.delete(todo.id);
+                      });
+                    },
                     icon: const Icon(
                       Icons.delete,
                       color: Colors.red,
@@ -57,5 +93,81 @@ class _HomePageState extends State<HomePage> {
         },
       ),
     );
+  }
+
+  void _addOrEditTodo({
+    Todo? todo,
+  }) {
+    TextEditingController contentController = TextEditingController(
+      text: todo?.content ?? '',
+    );
+    Status status = todo?.status ?? Status.pending;
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(todo != null ? 'Edit TO-Do' : 'Add Todo'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: contentController,
+                  decoration: const InputDecoration(
+                    labelText: 'Content',
+                  ),
+                ),
+                DropdownButtonFormField<Status>(
+                  value: status,
+                  items: Status.values
+                      .map((e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(e.name),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      if (value == null) return;
+                      status = value;
+                    });
+                  },
+                )
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (contentController.text.isNotEmpty) {
+                    late Todo newTodo;
+                    if (todo != null) {
+                      newTodo = todo.copyWith(
+                        content: contentController.text,
+                        status: status,
+                      );
+                    } else {
+                      newTodo = Todo().copyWith(
+                        content: contentController.text,
+                        status: status,
+                      );
+                    }
+                    await DatabaseService.db.writeTxn(
+                      () async {
+                        await DatabaseService.db.todos.put(newTodo);
+                      },
+                    );
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        });
   }
 }
