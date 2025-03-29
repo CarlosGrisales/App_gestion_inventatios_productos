@@ -1,5 +1,5 @@
 enum Status {
-  completed,
-  pending,
-  inProgress,
+  available,
+  outOfStock,
+  lowStock,
 }
