@@ -74,7 +74,14 @@ const ProductSchema = CollectionSchema(
       ],
     )
   },
-  links: {},
+  links: {
+    r'inventory': LinkSchema(
+      id: 5087812038581383031,
+      name: r'inventory',
+      target: r'Inventory',
+      single: true,
+    )
+  },
   embeddedSchemas: {},
   getId: _productGetId,
   getLinks: _productGetLinks,
@@ -181,11 +188,13 @@ Id _productGetId(Product object) {
 }
 
 List<IsarLinkBase<dynamic>> _productGetLinks(Product object) {
-  return [];
+  return [object.inventory];
 }
 
 void _productAttach(IsarCollection<dynamic> col, Id id, Product object) {
   object.id = id;
+  object.inventory
+      .attach(col, col.isar.collection<Inventory>(), r'inventory', id);
 }
 
 extension ProductQueryWhereSort on QueryBuilder<Product, Product, QWhere> {
@@ -1083,7 +1092,20 @@ extension ProductQueryObject
     on QueryBuilder<Product, Product, QFilterCondition> {}
 
 extension ProductQueryLinks
-    on QueryBuilder<Product, Product, QFilterCondition> {}
+    on QueryBuilder<Product, Product, QFilterCondition> {
+  QueryBuilder<Product, Product, QAfterFilterCondition> inventory(
+      FilterQuery<Inventory> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.link(q, r'inventory');
+    });
+  }
+
+  QueryBuilder<Product, Product, QAfterFilterCondition> inventoryIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.linkLength(r'inventory', 0, true, 0, true);
+    });
+  }
+}
 
 extension ProductQuerySortBy on QueryBuilder<Product, Product, QSortBy> {
   QueryBuilder<Product, Product, QAfterSortBy> sortByBarcode() {

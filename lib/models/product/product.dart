@@ -1,4 +1,5 @@
-import 'package:gestion_inventarios_productos/models/enums.dart';
+import 'package:gestion_inventarios_productos/models/inventory/inventory.dart';
+import 'package:gestion_inventarios_productos/models/product/enums.dart';
 import 'package:isar/isar.dart';
 
 part 'product.g.dart';
@@ -34,6 +35,9 @@ class Product {
 
   /// Fecha de la última actualización del producto.
   DateTime updateAt = DateTime.now();
+
+  /// Relación con el inventario
+  final inventory = IsarLink<Inventory>();
 
   /// Crea una copia del objeto `Producto`, permitiendo modificar ciertos atributos.
   ///

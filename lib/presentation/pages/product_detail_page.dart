@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gestion_inventarios_productos/models/product.dart';
+import 'package:gestion_inventarios_productos/models/product/product.dart';
 
 class ProductDetailPage extends StatelessWidget {
   final Product product;
@@ -9,7 +9,7 @@ class ProductDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(product.name ?? 'Product Detail')),
+      appBar: AppBar(title: const Text('Product Detail')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

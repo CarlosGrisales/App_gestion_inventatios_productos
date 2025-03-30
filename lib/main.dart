@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gestion_inventarios_productos/pages/home_page.dart';
+import 'package:gestion_inventarios_productos/presentation/pages/home_page.dart';
 import 'package:gestion_inventarios_productos/services/database_service.dart';
 
 void main() async {
@@ -9,7 +9,7 @@ void main() async {
 
 Future<void> _setup() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await DatabaseService.Setup();
+  await DatabaseService.init();
 }
 
 class MyApp extends StatelessWidget {
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: HomePage(),
     );
   }
 }
