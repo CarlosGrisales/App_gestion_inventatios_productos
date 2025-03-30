@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gestion_inventarios_productos/models/inventory/inventory.dart';
 import 'package:gestion_inventarios_productos/presentation/pages/product_list_page.dart';
 import 'package:gestion_inventarios_productos/services/database_service.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,7 +20,6 @@ class _HomePageState extends State<HomePage> {
     _loadInventories();
   }
 
-  /// Cargar todos los inventarios desde la base de datos
   Future<void> _loadInventories() async {
     final data = await DatabaseService.getInventories();
     setState(() {
@@ -27,7 +27,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  /// Mostrar diálogo para agregar un nuevo inventario
   void _showAddInventoryDialog() {
     TextEditingController nameController = TextEditingController();
 
@@ -63,8 +62,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// Eliminar inventario con confirmación
-  void _deleteInventory(int inventoryId) async {
+  Future<void> _deleteInventory(Inventory inventory) async {
     bool confirmDelete = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -85,7 +83,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (confirmDelete) {
-      await DatabaseService.deleteInventory(inventoryId);
+      await DatabaseService.deleteInventory(inventory.id);
       _loadInventories();
     }
   }
@@ -93,35 +91,106 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Inventarios')),
-      body: inventories.isEmpty
-          ? const Center(child: Text('No hay inventarios aún'))
-          : ListView.builder(
-              itemCount: inventories.length,
-              itemBuilder: (context, index) {
-                final inventory = inventories[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(inventory.name),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteInventory(inventory.id),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProductListPage(inventory: inventory),
-                        ),
-                      );
-                    },
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text('Inventarios'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFDCECFB), Color(0xFFF3F4F6)],
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 150),
+            Container(
+              height: 200,
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 4),
                   ),
-                );
-              },
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                'assets/list_product.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(Icons.image_not_supported,
+                        size: 80, color: Colors.grey),
+                  );
+                },
+              ),
             ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: inventories.isEmpty
+                  ? const Center(child: Text('No hay inventarios aún'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: inventories.length,
+                      itemBuilder: (context, index) {
+                        final inventory = inventories[index];
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4,
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 10),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(12),
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  Colors.blueAccent.withOpacity(0.2),
+                              child: Icon(LucideIcons.box,
+                                  color: Colors.blueAccent),
+                            ),
+                            title: Text(
+                              inventory.name,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(LucideIcons.trash,
+                                  color: Colors.red),
+                              onPressed: () => _deleteInventory(inventory),
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ProductListPage(inventory: inventory),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddInventoryDialog,
-        child: const Icon(Icons.add),
+        child: const Icon(LucideIcons.plus),
       ),
     );
   }

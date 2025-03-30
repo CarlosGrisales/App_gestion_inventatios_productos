@@ -6,9 +6,10 @@ import 'package:gestion_inventarios_productos/models/product/enums.dart';
 import 'package:gestion_inventarios_productos/models/product/product.dart';
 import 'package:gestion_inventarios_productos/presentation/pages/product_detail_page.dart';
 import 'package:gestion_inventarios_productos/services/database_service.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 /// Página principal de la aplicación donde se muestran la lista de productos.
-/// Permite agregar, editar y eliminar productos.
+/// Permite agregar, editar y eliminar productos.class ProductListPage extends StatefulWidget {
 class ProductListPage extends StatefulWidget {
   final Inventory inventory;
 
@@ -19,11 +20,7 @@ class ProductListPage extends StatefulWidget {
 }
 
 class _ProductListPageState extends State<ProductListPage> {
-  /// Lista de productos obtenidas de la base de datos.
   List<Product> todos = [];
-
-  /// Suscripción para escuchar cambios en la base de datos en tiempo real.
-  StreamSubscription? todosStream;
 
   @override
   void initState() {
@@ -31,7 +28,6 @@ class _ProductListPageState extends State<ProductListPage> {
     _loadProducts();
   }
 
-  /// Cargar productos del inventario actual
   Future<void> _loadProducts() async {
     final data =
         await DatabaseService.getProductsByInventory(widget.inventory.id);
@@ -41,18 +37,70 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   @override
-  void dispose() {
-    /// Cancela la suscripción al flujo de datos para evitar fugas de memoria.
-    todosStream?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SizedBox.expand(
-          child: _buildUI(),
+      extendBodyBehindAppBar: true, // Gradiente detrás de la AppBar
+      appBar: AppBar(
+        title: Text(widget.inventory.name),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity, // Que abarque toda la pantalla
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFDCECFB), // Azul claro
+              Color(0xFFF3F4F6), // Gris claro
+            ],
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 150), // Espacio para la AppBar
+
+            // Imagen de encabezado
+            Container(
+              height: 200,
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                'assets/list_product.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(
+                      Icons.image_not_supported,
+                      size: 80,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Lista de productos
+            Expanded(
+              child: _buildProductList(),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -62,195 +110,219 @@ class _ProductListPageState extends State<ProductListPage> {
     );
   }
 
-  /// Construye la interfaz de usuario mostrando la lista de productos.
-  Widget _buildUI() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-      child: ListView.builder(
-        itemCount: todos.length, // Número de produtos en la lista.
-        itemBuilder: (BuildContext context, int index) {
-          final todo = todos[index];
-          return Card(
-            child: ListTile(
-              title: Text(todo.name ?? ''),
-              subtitle: Text('Status ${todo.status.name} at ${todo.updateAt}'),
-              onTap: () {
-                // Navegar a la pantalla de detalle del producto
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProductDetailPage(product: todo),
-                  ),
-                );
-              },
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  /// Botón para editar el producto.
-                  IconButton(
-                    onPressed: () {
-                      _addOrEditTodo(product: todo);
-                    },
-                    icon: const Icon(Icons.edit),
-                  ),
-
-                  /// Botón para eliminar el producto.
-                  IconButton(
-                    onPressed: () async {
-                      bool confirmDelete = await showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Eliminar Producto'),
-                          content: const Text(
-                              '¿Estás seguro de que deseas eliminar este producto?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancelar'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Eliminar',
-                                  style: TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        ),
-                      );
-
-                      if (confirmDelete) {
-                        await DatabaseService.db.writeTxn(() async {
-                          // Buscar el producto antes de eliminarlo
-                          final product =
-                              await DatabaseService.db.products.get(todo.id);
-
-                          if (product != null) {
-                            // Desvincular del inventario antes de eliminarlo
-                            product.inventory.value = null;
-                            await product.inventory.save();
-
-                            // Eliminar el producto
-                            await DatabaseService.db.products.delete(todo.id);
-                          }
-                          // Remover el producto de la lista local y actualizar la UI
-                          setState(() {
-                            todos.removeWhere((p) => p.id == todo.id);
-                          });
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                  )
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  /// Abre un cuadro de diálogo para agregar o editar un producto.
-  void _addOrEditTodo({Product? product}) {
-    TextEditingController nameController = TextEditingController(
-      text: product?.name ?? '',
-    );
-    Status status = product?.status ?? Status.available;
-    TextEditingController barcodeController = TextEditingController(
-      text: product?.barcode ?? '',
-    );
-    TextEditingController priceController = TextEditingController(
-      text: product?.price?.toString() ?? '',
-    );
-    TextEditingController quantityController = TextEditingController(
-      text: product?.quantity.toString() ?? '',
-    );
-
-    showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title:
-                Text(product != null ? 'Editar Producto' : 'Agregar Producto'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nombre'),
+  Widget _buildProductList() {
+    return todos.isEmpty
+        ? const Center(child: Text("No hay productos"))
+        : ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: todos.length,
+            itemBuilder: (BuildContext context, int index) {
+              final todo = todos[index];
+              return Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                DropdownButtonFormField<Status>(
-                  value: status,
-                  items: Status.values
-                      .map((e) => DropdownMenuItem(
-                            value: e,
-                            child: Text(e.name),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      if (value == null) return;
-                      status = value;
-                    });
+                elevation: 4,
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(12),
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.blueAccent.withOpacity(0.2),
+                    child: Icon(
+                      LucideIcons.box,
+                      color: Colors.blueAccent,
+                    ),
+                  ),
+                  title: Text(
+                    todo.name ?? 'Sin nombre',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(LucideIcons.tag, size: 16, color: Colors.grey),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            // Esto evitará el desbordamiento
+                            child: Text(
+                              "Status: ${todo.status.name}",
+                              style: const TextStyle(color: Colors.grey),
+                              overflow: TextOverflow
+                                  .ellipsis, // Evita que el texto se salga del área disponible
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Icon(LucideIcons.archive,
+                              size: 16, color: Colors.grey),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text("${todo.quantity}",
+                                style: const TextStyle(color: Colors.grey)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          _addOrEditTodo(product: todo);
+                        },
+                        icon: const Icon(LucideIcons.pencil,
+                            color: Colors.orange),
+                      ),
+                      IconButton(
+                        onPressed: () => _deleteProduct(todo),
+                        icon: const Icon(LucideIcons.trash, color: Colors.red),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProductDetailPage(product: todo),
+                      ),
+                    );
                   },
                 ),
-                TextField(
-                  controller: barcodeController,
-                  decoration:
-                      const InputDecoration(labelText: 'Código de Barras'),
-                ),
-                TextField(
-                  controller: priceController,
-                  decoration: const InputDecoration(labelText: 'Precio'),
-                ),
-                TextField(
-                  controller: quantityController,
-                  decoration: const InputDecoration(labelText: 'Cantidad'),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancelar'),
+              );
+            },
+          );
+  }
+
+  Future<void> _deleteProduct(Product todo) async {
+    bool confirmDelete = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar Producto'),
+        content:
+            const Text('¿Estás seguro de que deseas eliminar este producto?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmDelete) {
+      await DatabaseService.db.writeTxn(() async {
+        final product = await DatabaseService.db.products.get(todo.id);
+        if (product != null) {
+          product.inventory.value = null;
+          await product.inventory.save();
+          await DatabaseService.db.products.delete(todo.id);
+        }
+        setState(() {
+          todos.removeWhere((p) => p.id == todo.id);
+        });
+      });
+    }
+  }
+
+  void _addOrEditTodo({Product? product}) {
+    TextEditingController nameController =
+        TextEditingController(text: product?.name ?? '');
+    Status status = product?.status ?? Status.available;
+    TextEditingController barcodeController =
+        TextEditingController(text: product?.barcode ?? '');
+    TextEditingController priceController =
+        TextEditingController(text: product?.price?.toString() ?? '');
+    TextEditingController quantityController =
+        TextEditingController(text: product?.quantity.toString() ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(product != null ? 'Editar Producto' : 'Agregar Producto'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nombre'),
               ),
-              TextButton(
-                onPressed: () async {
-                  if (nameController.text.isNotEmpty) {
-                    late Product newProduct;
-                    if (product != null) {
-                      newProduct = product.copyWith(
-                        name: nameController.text,
-                        status: status,
-                        barcode: barcodeController.text,
-                        price: double.tryParse(priceController.text),
-                        quantity: int.tryParse(quantityController.text),
-                      );
-                    } else {
-                      newProduct = Product()
-                        ..name = nameController.text
-                        ..status = status
-                        ..barcode = barcodeController.text
-                        ..price = double.tryParse(priceController.text)
-                        ..quantity = int.tryParse(quantityController.text)
-                        ..inventory.value =
-                            widget.inventory; // Asigna el inventario
-                    }
-
-                    await DatabaseService.addProductToInventory(
-                        newProduct, widget.inventory);
-
-                    // Recargar la lista de productos después de agregar uno nuevo
-                    _loadProducts();
-
-                    Navigator.pop(context);
+              DropdownButtonFormField<Status>(
+                value: status,
+                items: Status.values
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      status = value;
+                    });
                   }
                 },
-                child: const Text('Guardar'),
+              ),
+              TextField(
+                controller: barcodeController,
+                decoration:
+                    const InputDecoration(labelText: 'Código de Barras'),
+              ),
+              TextField(
+                controller: priceController,
+                decoration: const InputDecoration(labelText: 'Precio'),
+              ),
+              TextField(
+                controller: quantityController,
+                decoration: const InputDecoration(labelText: 'Cantidad'),
               ),
             ],
-          );
-        });
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (nameController.text.isNotEmpty) {
+                  late Product newProduct;
+                  if (product != null) {
+                    newProduct = product.copyWith(
+                      name: nameController.text,
+                      status: status,
+                      barcode: barcodeController.text,
+                      price: double.tryParse(priceController.text),
+                      quantity: int.tryParse(quantityController.text),
+                    );
+                  } else {
+                    newProduct = Product()
+                      ..name = nameController.text
+                      ..status = status
+                      ..barcode = barcodeController.text
+                      ..price = double.tryParse(priceController.text)
+                      ..quantity = int.tryParse(quantityController.text)
+                      ..inventory.value = widget.inventory;
+                  }
+
+                  await DatabaseService.addProductToInventory(
+                      newProduct, widget.inventory);
+
+                  _loadProducts();
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
