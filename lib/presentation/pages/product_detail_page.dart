@@ -2,6 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:gestion_inventarios_productos/models/product/product.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+/// # clase ProductDetailPage
+///
+/// ## Descripción
+/// `ProductDetailPage` es una pantalla que muestra los detalles de un producto seleccionado.
+/// Incluye información como nombre, estado, código de barras, precio, cantidad y fecha de actualización.
+///
+/// ## Dependencias
+/// - `flutter/material.dart`: Para la interfaz de usuario en Flutter.
+/// - `gestion_inventarios_productos/models/product/product.dart`: Modelo de datos `Product`.
+/// - `lucide_icons/lucide_icons.dart`: Conjunto de iconos utilizados en la interfaz.
+///
+/// ## Clase `ProductDetailPage`
+/// ### Descripción
+/// `ProductDetailPage` es un `StatelessWidget` que recibe un objeto `Product` como parámetro
+/// y muestra sus detalles en un diseño atractivo.
+///
+/// ### `build(BuildContext context)`
+/// Construye la interfaz de usuario que incluye:
+/// - **AppBar** con el título "Detalles del Producto".
+/// - **Imagen del producto** con un marcador de error si la imagen no se encuentra.
+/// - **Tarjeta con detalles del producto**, donde se muestra la información del producto en filas organizadas.
+///
+/// ### Métodos Auxiliares
+///
+/// #### `_buildDetailRow({required IconData icon, required String label, required String value, required BuildContext context})`
+/// Construye una fila de detalle con un ícono, etiqueta y valor.
+///
+/// #### `_buildDivider()`
+/// Devuelve un `Divider` para separar los elementos de la tarjeta.
+///
+/// #### `_formatDate(DateTime date)`
+/// Formatea una fecha para mostrarla en formato "dd/MM/yyyy HH:mm".
+///
+/// ## UI y Estilo
+/// - Usa un `LinearGradient` como fondo.
+/// - La tarjeta de detalles tiene bordes redondeados y sombra para mejorar la apariencia.
+/// - Los iconos de `LucideIcons` se utilizan para representar visualmente los atributos del producto.
+///
+/// ## Resumen
+/// `ProductDetailPage` es una pantalla informativa que proporciona una vista detallada de un producto
+/// con un diseño atractivo y organizado.
+
 class ProductDetailPage extends StatelessWidget {
   final Product product;
 
@@ -10,32 +52,28 @@ class ProductDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar:
-          true, // Hace que el gradiente cubra hasta la barra de estado
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Detalles del Producto'),
-        backgroundColor: Colors
-            .transparent, // Fondo transparente para integrar con el gradiente
-        elevation: 0, // Quita la sombra de la AppBar
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: Container(
         width: double.infinity,
-        height: double.infinity, // Asegura que ocupe toda la pantalla
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFDCECFB), // Azul claro
-              Color(0xFFF3F4F6), // Gris claro
+              Color(0xFFDCECFB),
+              Color(0xFFF3F4F6),
             ],
           ),
         ),
         child: Column(
           children: [
-            const SizedBox(
-                height:
-                    120), // Espacio para que la imagen no quede pegada a la AppBar
+            const SizedBox(height: 120),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
@@ -72,7 +110,7 @@ class ProductDetailPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    // Tarjeta con detalles del producto
+                    /// Tarjeta con detalles del producto
                     Card(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

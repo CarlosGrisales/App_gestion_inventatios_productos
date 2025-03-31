@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:gestion_inventarios_productos/models/inventory/inventory.dart';
 import 'package:gestion_inventarios_productos/models/product/enums.dart';
@@ -8,8 +7,63 @@ import 'package:gestion_inventarios_productos/presentation/pages/product_detail_
 import 'package:gestion_inventarios_productos/services/database_service.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-/// Página principal de la aplicación donde se muestran la lista de productos.
-/// Permite agregar, editar y eliminar productos.class ProductListPage extends StatefulWidget {
+/// # Clase ProductListPage
+///
+/// ## Descripción
+/// ProductListPage es una pantalla que muestra una lista de productos asociados a un inventario específico.
+/// Los productos se obtienen desde la base de datos y se presentan en una lista con opciones para agregar,
+/// editar y eliminar productos.
+///
+/// ## Dependencias
+/// - flutter/material.dart: Para la construcción de la interfaz de usuario.
+/// - gestion_inventarios_productos/models/inventory/inventory.dart: Modelo de datos Inventory.
+/// - gestion_inventarios_productos/models/product/product.dart: Modelo de datos Product.
+/// - gestion_inventarios_productos/models/product/enums.dart: Enumeraciones de Product, como su estado.
+/// - gestion_inventarios_productos/presentation/pages/product_detail_page.dart: Pantalla de detalles del producto.
+/// - gestion_inventarios_productos/services/database_service.dart: Servicio para la gestión de base de datos.
+/// - lucide_icons/lucide_icons.dart: Conjunto de iconos utilizados en la interfaz.
+///
+/// ## Clase ProductListPage
+/// ### Descripción
+/// ProductListPage es un StatefulWidget que permite visualizar y gestionar los productos de un inventario.
+/// Se proporciona una interfaz intuitiva con una lista de productos y opciones de gestión.
+///
+/// ### initState()
+/// Método que se ejecuta al iniciar la pantalla y carga los productos desde la base de datos.
+///
+/// ### build(BuildContext context)
+/// Construye la interfaz de usuario que incluye:
+/// - AppBar con el nombre del inventario.
+/// - Imagen de encabezado decorativa.
+/// - Lista de productos, cada uno mostrado en una tarjeta con detalles y acciones disponibles.
+/// - Botón flotante para agregar nuevos productos.
+///
+/// ### Métodos Auxiliares
+///
+/// #### _loadProducts()
+/// Obtiene los productos del inventario desde la base de datos y actualiza la lista.
+///
+/// #### _buildProductList()
+/// Construye y muestra la lista de productos en un ListView.builder.
+///
+/// #### _deleteProduct(Product product)
+/// Muestra un cuadro de diálogo de confirmación y, si se confirma, elimina el producto de la base de datos.
+///
+/// #### _addOrEditTodo({Product? product})
+/// Muestra un cuadro de diálogo para agregar o editar un producto. Permite modificar su nombre,
+/// estado, código de barras, precio y cantidad.
+///
+/// ## UI y Estilo
+/// - Usa un LinearGradient como fondo para mejorar la estética.
+/// - Las tarjetas de producto tienen bordes redondeados y sombras sutiles.
+/// - Se utilizan iconos de LucideIcons para representar visualmente las propiedades del producto.
+///
+/// ## Resumen
+/// ProductListPage es una pantalla clave en la aplicación que facilita la gestión de productos
+/// dentro de un inventario. Su diseño intuitivo y sus funcionalidades permiten una experiencia fluida
+/// para el usuario al administrar los productos.
+///
+
 class ProductListPage extends StatefulWidget {
   final Inventory inventory;
 
@@ -112,7 +166,7 @@ class _ProductListPageState extends State<ProductListPage> {
 
   Widget _buildProductList() {
     return todos.isEmpty
-        ? const Center(child: Text("No hay productos"))
+        ? const Center(child: Text("No hay productos, por favor agrega uno."))
         : ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: todos.length,
@@ -128,7 +182,7 @@ class _ProductListPageState extends State<ProductListPage> {
                   contentPadding: const EdgeInsets.all(12),
                   leading: CircleAvatar(
                     backgroundColor: Colors.blueAccent.withOpacity(0.2),
-                    child: Icon(
+                    child: const Icon(
                       LucideIcons.box,
                       color: Colors.blueAccent,
                     ),
@@ -142,7 +196,8 @@ class _ProductListPageState extends State<ProductListPage> {
                     children: [
                       Row(
                         children: [
-                          Icon(LucideIcons.tag, size: 16, color: Colors.grey),
+                          const Icon(LucideIcons.tag,
+                              size: 16, color: Colors.grey),
                           const SizedBox(width: 5),
                           Expanded(
                             // Esto evitará el desbordamiento
@@ -157,7 +212,7 @@ class _ProductListPageState extends State<ProductListPage> {
                       ),
                       Row(
                         children: [
-                          Icon(LucideIcons.archive,
+                          const Icon(LucideIcons.archive,
                               size: 16, color: Colors.grey),
                           const SizedBox(width: 5),
                           Expanded(

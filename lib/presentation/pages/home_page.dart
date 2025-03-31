@@ -4,14 +4,66 @@ import 'package:gestion_inventarios_productos/presentation/pages/product_list_pa
 import 'package:gestion_inventarios_productos/services/database_service.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+/// # Clase de HomePage
+///
+/// ## Descripción
+/// La clase HomePage es una pantalla principal de la aplicación de gestión de inventarios.
+/// Permite visualizar una lista de inventarios, agregar nuevos inventarios y eliminar los existentes.
+/// Se conecta con la base de datos mediante DatabaseService.
+///
+/// ## Dependencias
+/// - flutter/material.dart: Para la interfaz de usuario en Flutter.
+/// - gestion_inventarios_productos/models/inventory/inventory.dart: Modelo de datos Inventory.
+/// - gestion_inventarios_productos/presentation/pages/product_list_page.dart: Pantalla de lista de productos.
+/// - gestion_inventarios_productos/services/database_service.dart: Servicio para interactuar con la base de datos.
+/// - lucide_icons/lucide_icons.dart: Conjunto de iconos utilizados en la interfaz.
+///
+/// ## Clase HomePage
+/// ### Descripción
+/// HomePage es un StatefulWidget que representa la pantalla principal donde se listan los inventarios
+/// y se permite la navegación a la lista de productos.
+///
+/// ### Métodos
+///
+/// #### _loadInventories()
+/// Carga los inventarios desde la base de datos utilizando DatabaseService.getInventories()
+/// y los almacena en la lista inventories.
+///
+/// #### _showAddInventoryDialog()
+/// Muestra un cuadro de diálogo para agregar un nuevo inventario.
+/// Si el usuario ingresa un nombre y lo confirma, se guarda en la base de datos y se actualiza la lista.
+///
+/// #### _deleteInventory(Inventory inventory)
+/// Muestra un cuadro de confirmación para eliminar un inventario.
+/// Si el usuario acepta, el inventario se elimina de la base de datos y se actualiza la lista.
+///
+/// ### build(BuildContext context)
+/// Construye la interfaz de usuario que incluye:
+/// - AppBar con el título "Inventarios".
+/// - Imagen de encabezado.
+/// - Lista de inventarios: Si está vacía, muestra un mensaje indicando que no hay inventarios.
+/// - Botón flotante para agregar un nuevo inventario.
+///
+/// ### UI y Estilo
+/// - Usa un LinearGradient como fondo.
+/// - Las tarjetas de inventario tienen bordes redondeados y sombras sutiles.
+/// - Se utilizan iconos de LucideIcons para mejorar la experiencia visual.
+///
+/// ## Navegación
+/// Cuando el usuario toca un inventario, es redirigido a ProductListPage, que muestra los productos del inventario seleccionado.
+///
+/// ## Resumen
+/// Esta pantalla gestiona la lista de inventarios con funcionalidades de agregar, visualizar y eliminar inventarios,
+/// proporcionando una interfaz atractiva y fácil de usar.
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   List<Inventory> inventories = [];
 
   @override
@@ -140,7 +192,9 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 20),
             Expanded(
               child: inventories.isEmpty
-                  ? const Center(child: Text('No hay inventarios aún'))
+                  ? const Center(
+                      child:
+                          Text('No hay inventarios aún, por favor agrega uno.'))
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: inventories.length,
@@ -158,7 +212,7 @@ class _HomePageState extends State<HomePage> {
                             leading: CircleAvatar(
                               backgroundColor:
                                   Colors.blueAccent.withOpacity(0.2),
-                              child: Icon(LucideIcons.box,
+                              child: const Icon(LucideIcons.box,
                                   color: Colors.blueAccent),
                             ),
                             title: Text(
